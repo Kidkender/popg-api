@@ -118,14 +118,15 @@ export class ContractsService {
     return await vestingWallet.callStatic.releaseble(TOKEN_ADDRESS);
   }
 
-  public async getPhaseAtTime(time: number): Promise<number> {
+  public async getPhaseAtTime(): Promise<number> {
+    const time = Math.floor(Date.now() / 1000);
     const vestingWallet = await this.vestingContract();
     return await vestingWallet.callStatic.getPhaseAtTime(time);
   }
 
   public async changeAddressBenificiary(
     request: ChangeAddressDto,
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     const vestingWallet = await this.vestingContract();
     const indexBenificiary = getIndexFromValue(request.typeBenificiary);
     await vestingWallet
@@ -134,7 +135,7 @@ export class ContractsService {
     return true;
   }
 
-  public async release(): Promise<Boolean> {
+  public async release(): Promise<boolean> {
     const vestingWallet = await this.vestingContract();
     await vestingWallet.connect(this.getSigner()).release(TOKEN_ADDRESS);
     return true;
