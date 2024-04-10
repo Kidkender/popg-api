@@ -7,26 +7,19 @@ import { HttpInterceptor } from './common/interceptor/http/http.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggerMiddleware } from './common/middleware/logger/logger.middleware';
 import { ContractsController } from './contracts/contracts.controller';
+import { ConfigModule } from '@nestjs/config';
+import { DevConfigModule } from './common/provider/devConfig.module';
 
 @Module({
   imports: [
-    EthersModule.forRootAsync({
-      inject: [DevConfigService],
-      useFactory: async (config: DevConfigService) => {
-        return {
-          network: SEPOLIA_NETWORK,
-          infura: config.infura,
-        };
-      },
+    ConfigModule.forRoot({
+      isGlobal: true,
     }),
+    DevConfigModule,
     ContractsModule,
   ],
   controllers: [],
   providers: [
-    {
-      provide: DevConfigService,
-      useClass: DevConfigService,
-    },
     {
       provide: APP_INTERCEPTOR,
       useClass: HttpInterceptor,
