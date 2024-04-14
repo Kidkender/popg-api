@@ -21,6 +21,7 @@ import { MilestonesDto, ReleaseAddressDto } from './dto';
 import { TimeReleaseDto } from './dto/timeRelease.dto';
 import { ChangeAddressDto } from './dto/change-address.dto';
 import { getIndexFromValue } from './enum/address';
+import { ContractMapper } from './contracts.mapper';
 
 @Injectable()
 export class ContractsService {
@@ -29,6 +30,7 @@ export class ContractsService {
     @InjectEthersProvider() private readonly ethersProvider: BaseProvider,
     @InjectSignerProvider() private readonly signerProvider: EthersSigner,
     private readonly configService: ConfigService,
+    private readonly contractMapper: ContractMapper,
   ) {}
   private readonly logger = new Logger(ContractsService.name);
   private readonly PRIVATE_KEY = this.configService.get('PRIVATE_KEY');
@@ -79,8 +81,10 @@ export class ContractsService {
   }
 
   public async getInforReleasePhase(index: number): Promise<MilestonesDto> {
-    const tokenContract = await this.tokenContract();
-    return tokenContract.callStatic.milestones(index);
+    const vestingContract = await this.vestingContract();
+    const result = await vestingContract.callStatic.milestones(index);
+
+    return this.contractMapper.mapToMilestoneDto(result);
   }
 
   public async getInforReleaseAddress(

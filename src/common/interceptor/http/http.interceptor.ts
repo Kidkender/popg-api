@@ -2,6 +2,7 @@ import {
   CallHandler,
   ExecutionContext,
   HttpException,
+  HttpStatus,
   Injectable,
   Logger,
   NestInterceptor,
@@ -40,9 +41,12 @@ export class HttpInterceptor implements NestInterceptor {
         const errorMessage = error.response?.data
           ? error.response.data
           : error.message;
+        const status = error.status
+          ? error.status
+          : HttpStatus.INTERNAL_SERVER_ERROR;
 
         this.logger.error('Request error: ' + errorMessage);
-        return throwError(() => new HttpException(errorMessage, error.status));
+        return throwError(() => new HttpException(errorMessage, status));
       }),
     );
   }

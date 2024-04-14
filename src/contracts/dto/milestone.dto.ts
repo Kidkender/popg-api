@@ -1,5 +1,5 @@
 export class MilestonesDto {
-  timestampt: number;
-  percentageRelease: number;
+  timestampt: string;
+  percentageRelease: string;
   released: boolean;
 }

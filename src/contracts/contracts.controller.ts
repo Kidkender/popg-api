@@ -18,12 +18,12 @@ export class ContractsController {
     return this.contractService.getBalance(address);
   }
 
-  @Get('totalSupply')
+  @Get('total-supply')
   getTotalSupply() {
     return this.contractService.getTotalSupply();
   }
 
-  @Get('phase:/id')
+  @Get('phase/:id')
   async getInforReleasePhase(@Param('id', ParseIntPipe) id: number) {
     return await this.contractService.getInforReleasePhase(id);
   }
