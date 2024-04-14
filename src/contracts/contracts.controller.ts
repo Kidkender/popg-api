@@ -28,19 +28,24 @@ export class ContractsController {
     return await this.contractService.getInforReleasePhase(id);
   }
 
-  @Get('phase/:address')
+  @Get('vesting/:address')
   async getInforReleaseAddress(@Param('address') address: string) {
-    return await this.contractService.getInforReleaseAddress(address);
+    return await this.contractService.getInforBenificiary(address);
+  }
+
+  @Get('vesting/range/time')
+  async getRangeTime() {
+    return await this.contractService.getRangeRelease();
+  }
+
+  @Get('vesting/benificiary/:id')
+  async getBenificiaryById(@Param('id', ParseIntPipe) id: number) {
+    return await this.contractService.getBenificiary(id);
   }
 
   @Get('vesting/balance')
   async getCurrentBalanace(@Query('address') address: string) {
     return await this.contractService.getCurrentBalanceVestingContract();
-  }
-
-  @Get('rangeTime')
-  getStartEndTime() {
-    return this.contractService.getStartAndEndTime();
   }
 
   @Get('vesting/amount-released')

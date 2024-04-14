@@ -20,7 +20,9 @@ import {
 @Injectable()
 export class HttpInterceptor implements NestInterceptor {
   private readonly logger = new Logger(HttpInterceptor.name);
-  private readonly routeWithoutTimeout: string[] = [];
+  private readonly routeWithoutTimeout: string[] = [
+    '/contracts/vesting/range/time',
+  ];
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();

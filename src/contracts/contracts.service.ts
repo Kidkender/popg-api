@@ -1,5 +1,10 @@
 import { BaseProvider } from '@ethersproject/providers';
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Contract, ethers, VoidSigner, Wallet } from 'ethers';
 import { formatEther } from 'ethers/lib/utils';
@@ -11,17 +16,19 @@ import {
   InjectSignerProvider,
 } from 'nestjs-ethers';
 import {
+  ERROR_ADDRESS_NOT_FOUND,
   TOKEN_ABI_JSON,
   TOKEN_ADDRESS,
   VESTING_WALLET_ABI_JSON,
   VESTING_WALLET_ADDRESS,
 } from 'src/common/constants';
+import { convertToDecimal } from 'utils';
 import { getAbi } from 'utils/ethersUtils';
-import { MilestonesDto, ReleaseAddressDto } from './dto';
-import { TimeReleaseDto } from './dto/timeRelease.dto';
-import { ChangeAddressDto } from './dto/change-address.dto';
-import { getIndexFromValue } from './enum/address';
 import { ContractMapper } from './contracts.mapper';
+import { MilestonesDto, ReleaseAddressDto } from './dto';
+import { ChangeAddressDto } from './dto/change-address.dto';
+import { TimeReleaseDto } from './dto/timeRelease.dto';
+import { getIndexFromValue } from './enum/address';
 
 @Injectable()
 export class ContractsService {
@@ -87,29 +94,45 @@ export class ContractsService {
     return this.contractMapper.mapToMilestoneDto(result);
   }
 
-  public async getInforReleaseAddress(
+  public async getInforBenificiary(
     address: string,
   ): Promise<ReleaseAddressDto[]> {
+    try {
+      const vestingWallet = await this.vestingContract();
+      const result =
+        await vestingWallet.callStatic.getDistributionData(address);
+      return this.contractMapper.mapToInforBenificiary(result);
+    } catch (error) {
+      if (error.message.includes('bad address checksum')) {
+        throw new NotFoundException(ERROR_ADDRESS_NOT_FOUND);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  public async getRangeRelease(): Promise<TimeReleaseDto> {
     const vestingWallet = await this.vestingContract();
-    return await vestingWallet.callStatic.getDistributionData(address);
+    const startDate = await vestingWallet.callStatic.start();
+    const endDate = await vestingWallet.callStatic.end();
+    return {
+      start: convertToDecimal(startDate).toString(),
+      end: convertToDecimal(endDate).toString(),
+    };
   }
 
   public async getBenificiary(index: number): Promise<string> {
     const vestingWallet = await this.vestingContract();
-    return await vestingWallet.callStatic.getBenificiary(index);
+    try {
+      return await vestingWallet.callStatic.getBenificiary(index);
+    } catch (error) {
+      throw new BadRequestException(error.reason);
+    }
   }
 
   public async getCurrentBalanceVestingContract(): Promise<number> {
     const vestingWallet = await this.vestingContract();
     return await vestingWallet.getAvailableAmount(TOKEN_ADDRESS);
-  }
-
-  public async getStartAndEndTime(): Promise<TimeReleaseDto> {
-    const vestingWallet = await this.vestingContract();
-    const start = await vestingWallet.callStatic.start();
-    const end = await vestingWallet.callStatic.end();
-
-    return { start, end };
   }
 
   public async getAmountReleased(): Promise<number> {
